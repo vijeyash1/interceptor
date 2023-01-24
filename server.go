@@ -55,7 +55,7 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if error != nil {
 			return nil, error
 		}
-		allowed, err := cli.IsAllowed(
+		_, err := cli.IsAllowed(
 			context.TODO(),
 			client.NewPrincipal("id").WithRoles(mdrole[0]),
 			client.NewResource(mdkind[0], "id"),
