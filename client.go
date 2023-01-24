@@ -12,10 +12,10 @@ import (
 // PolicyPayload is the payload that is sent to the server
 // in the metadata of the request to check if the user has the required permissions
 type CheckPolicy struct {
-	Kind string `json:"kind"`
-	Scope    string `json:"scope"`
-	Role     string `json:"role"`
-	Action   string `json:"actions"`
+	Kind   *string `json:"kind"`
+	Scope  *string `json:"scope"`
+	Role   *string `json:"role"`
+	Action *string `json:"actions"`
 }
 
 // Valid is for checking if all the fields are added to the CheckPolicy
@@ -24,54 +24,54 @@ type Valid struct {
 }
 
 // AddKind adds the kind to the CheckPolicy
-func (p *CheckPolicy) AddRole(role string) *CheckPolicy {
+func (p *CheckPolicy) AddRole(role *string) *CheckPolicy {
 	return &CheckPolicy{
 		Role: role,
 	}
 }
 
 // AddResource adds the resource to the CheckPolicy
-func (p *CheckPolicy) AddKind(kind string) *CheckPolicy {
+func (p *CheckPolicy) AddKind(kind *string) *CheckPolicy {
 	return &CheckPolicy{
 		Kind: kind,
 	}
 }
 
 // AddScope adds the scope to the CheckPolicy
-func (p *CheckPolicy) AddScope(scope string) *CheckPolicy {
+func (p *CheckPolicy) AddScope(scope *string) *CheckPolicy {
 	return &CheckPolicy{
 		Scope: scope,
 	}
 }
 
 // AddActions adds the actions to the CheckPolicy
-func (p *CheckPolicy) AddActions(action string) *CheckPolicy {
+func (p *CheckPolicy) AddActions(action *string) *CheckPolicy {
 	return &CheckPolicy{
 		Action: action,
 	}
 }
 
 func (p *CheckPolicy) IsValid() bool {
-	if p.Kind == "" || p.Scope == "" || p.Role == "" || p.Action == "" {
+	if *p.Kind == "" || *p.Scope == "" || *p.Role == "" || *p.Action == "" {
 		return false
 	}
 	return true
 }
 
 func (p *CheckPolicy) GetKind() string {
-	return p.Kind
+	return *p.Kind
 }
 
 func (p *CheckPolicy) GetScope() string {
-	return p.Scope
+	return *p.Scope
 }
 
 func (p *CheckPolicy) GetRole() string {
-	return p.Role
+	return *p.Role
 }
 
 func (p *CheckPolicy) GetAction() string {
-	return p.Action
+	return *p.Action
 }
 
 func (p *CheckPolicy) Valid() (*Valid, error) {
@@ -98,15 +98,13 @@ conn, err := grpc.Dial(
 func (v *Valid) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// append the scope, resource, role and actions to the metadata
-		ctx = metadata.AppendToOutgoingContext(ctx, "scope", v.CheckPolicy.Scope)
-		ctx = metadata.AppendToOutgoingContext(ctx, "kind", v.CheckPolicy.Kind)
-		ctx = metadata.AppendToOutgoingContext(ctx, "role", v.CheckPolicy.Role)
-		ctx = metadata.AppendToOutgoingContext(ctx, "action", v.CheckPolicy.Action)
+		ctx = metadata.AppendToOutgoingContext(ctx, "scope", *v.CheckPolicy.Scope)
+		ctx = metadata.AppendToOutgoingContext(ctx, "kind", *v.CheckPolicy.Kind)
+		ctx = metadata.AppendToOutgoingContext(ctx, "role", *v.CheckPolicy.Role)
+		ctx = metadata.AppendToOutgoingContext(ctx, "action", *v.CheckPolicy.Action)
 		// Invoke the original method call
 		err := invoker(ctx, method, req, reply, cc, opts...)
-		log.Printf("client interceptor hit: appending scope,Kind,role,action: '%v %v %v %v ' to metadata", v.CheckPolicy.Scope, v.CheckPolicy.Kind, v.CheckPolicy.Role, v.CheckPolicy.Action)
+		log.Printf("client interceptor hit: appending scope,Kind,role,action: '%v %v %v %v ' to metadata", *v.CheckPolicy.Scope, *v.CheckPolicy.Kind, *v.CheckPolicy.Role, *v.CheckPolicy.Action)
 		return err
 	}
 }
-
-
