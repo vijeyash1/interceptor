@@ -58,6 +58,22 @@ func (p *CheckPolicy) IsValid() bool {
 	return true
 }
 
+func (p *CheckPolicy) GetKind() string {
+	return p.Kind
+}
+
+func (p *CheckPolicy) GetScope() string {
+	return p.Scope
+}
+
+func (p *CheckPolicy) GetRole() string {
+	return p.Role
+}
+
+func (p *CheckPolicy) GetAction() string {
+	return p.Action
+}
+
 func (p *CheckPolicy) Valid() (*Valid, error) {
 	if p.IsValid() {
 		return &Valid{
