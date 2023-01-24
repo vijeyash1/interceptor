@@ -1,0 +1,1 @@
+**Interceptor module for client and server based on cerbos authorization**
