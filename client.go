@@ -8,14 +8,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
-
+// role action scope resource 
 // PolicyPayload is the payload that is sent to the server
 // in the metadata of the request to check if the user has the required permissions
 type CheckPolicy struct {
 	Kind   string `json:"kind"`
 	Scope  string `json:"scope"`
 	Role   string `json:"role"`
-	Action string `json:"actions"`
+	Action []string `json:"actions"`
 }
 
 // Valid is for checking if all the fields are added to the CheckPolicy
@@ -42,13 +42,15 @@ func (p *CheckPolicy) AddScope(scope string) *CheckPolicy {
 }
 
 // AddActions adds the actions to the CheckPolicy
-func (p *CheckPolicy) AddActions(action string) *CheckPolicy {
-	p.Action = action
+func (p *CheckPolicy) AddActions(action []string) *CheckPolicy {
+	for _, a := range action {
+		p.Action = append(p.Action, a)
+	}
 	return p
 }
 
 func (p *CheckPolicy) IsValid() bool {
-	if p.Kind == "" || p.Scope == "" || p.Role == "" || p.Action == "" {
+	if p.Kind == "" || p.Scope == "" || p.Role == "" || len(p.Action) == 0 {
 		return false
 	}
 	return true
@@ -66,7 +68,7 @@ func (p *CheckPolicy) GetRole() string {
 	return p.Role
 }
 
-func (p *CheckPolicy) GetAction() string {
+func (p *CheckPolicy) GetAction() []string {
 	return p.Action
 }
 
@@ -97,7 +99,9 @@ func (v *Valid) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		ctx = metadata.AppendToOutgoingContext(ctx, "scope", v.CheckPolicy.Scope)
 		ctx = metadata.AppendToOutgoingContext(ctx, "kind", v.CheckPolicy.Kind)
 		ctx = metadata.AppendToOutgoingContext(ctx, "role", v.CheckPolicy.Role)
-		ctx = metadata.AppendToOutgoingContext(ctx, "action", v.CheckPolicy.Action)
+		for _, a := range v.CheckPolicy.Action {
+			ctx = metadata.AppendToOutgoingContext(ctx, "action", a)
+		}
 		// Invoke the original method call
 		err := invoker(ctx, method, req, reply, cc, opts...)
 		log.Printf("client interceptor hit: appending scope,Kind,role,action: '%v %v %v %v ' to metadata", v.CheckPolicy.Scope, v.CheckPolicy.Kind, v.CheckPolicy.Role, v.CheckPolicy.Action)

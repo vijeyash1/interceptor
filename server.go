@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	effectv1 "github.com/cerbos/cerbos/api/genpb/cerbos/effect/v1"
+
 	"github.com/cerbos/cerbos/client"
 
 	"google.golang.org/grpc"
@@ -55,20 +57,31 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if error != nil {
 			return nil, error
 		}
-		_, err := cli.IsAllowed(
-			context.TODO(),
-			client.NewPrincipal("id").WithRoles(mdrole[0]),
-			client.NewResource(mdkind[0], "id"),
-			mdaction[0],
-		)
+		principal := client.NewPrincipal("idid", mdrole...)
+		resource := client.NewResource(mdkind[0], "idid")
+		resource.WithScope(mdscope[0])
+		batch := client.NewResourceBatch()
+		batch.Add(resource, mdaction...)
+		resp, err := cli.CheckResources(context.Background(), principal, batch)
 		if err != nil {
 			return nil, err
 		}
 		h, err := handler(ctx, req)
-		if true {
+		result := resp.GetResults()
+		var allow bool
+		for _, r := range mdaction {
+			if result[0].Actions[r] == effectv1.Effect_EFFECT_ALLOW {
+				allow = true
+				return h, err
+			} else {
+				allow = false
+			}
+		}
+		if allow {
 			return h, err
 		} else {
-			return nil, fmt.Errorf("access denied")
+			return nil, fmt.Errorf("not allowed")
 		}
+
 	}
 }
