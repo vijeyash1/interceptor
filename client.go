@@ -52,7 +52,7 @@ func (p *CheckPolicy) AddActions(action string) *CheckPolicy {
 }
 
 func (p *CheckPolicy) IsValid() bool {
-	if p.Kind == "" || p.Scope == "" || p.Role == "" || len(p.Action) == 0 {
+	if p.Kind == "" || p.Scope == "" || p.Role == "" || p.Action == "" {
 		return false
 	}
 	return true
