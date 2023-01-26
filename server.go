@@ -37,6 +37,10 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if !ok {
 			return nil, fmt.Errorf("couldn't parse incoming context metadata")
 		}
+		mdprinciple := md.Get("principle")
+		if len(mdprinciple) == 0 {
+			return nil, fmt.Errorf("principle not found in metadata")
+		}
 		mdscope := md.Get("scope")
 		if len(mdscope) == 0 {
 			return nil, fmt.Errorf("scope not found in metadata")
@@ -57,8 +61,8 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if error != nil {
 			return nil, error
 		}
-		principal := client.NewPrincipal("idid", mdrole...)
-		resource := client.NewResource(mdkind[0], "idid")
+		principal := client.NewPrincipal(mdprinciple[0], mdrole...)
+		resource := client.NewResource(mdkind[0], "intelops")
 		resource.WithScope(mdscope[0])
 		batch := client.NewResourceBatch()
 		batch.Add(resource, mdaction...)
@@ -66,19 +70,19 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if err != nil {
 			return nil, err
 		}
-		h, err := handler(ctx, req)
+		
 		result := resp.GetResults()
 		var allow bool
 		for _, r := range mdaction {
 			if result[0].Actions[r] == effectv1.Effect_EFFECT_ALLOW {
 				allow = true
-				return h, err
+				
 			} else {
 				allow = false
 			}
 		}
 		if allow {
-			return h, err
+			return  handler(ctx, req)
 		} else {
 			return nil, fmt.Errorf("not allowed")
 		}

@@ -3,7 +3,6 @@ package interceptor
 import (
 	"context"
 	"errors"
-	"log"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -16,6 +15,7 @@ type CheckPolicy struct {
 	Scope  string `json:"scope"`
 	Role   string `json:"role"`
 	Action []string `json:"actions"`
+	Principle string `json:"principle"`
 }
 
 // Valid is for checking if all the fields are added to the CheckPolicy
@@ -49,8 +49,14 @@ func (p *CheckPolicy) AddActions(action []string) *CheckPolicy {
 	return p
 }
 
+// AddPrinciple adds the principle to the CheckPolicy
+func (p *CheckPolicy) AddPrinciple(principle string) *CheckPolicy {
+	p.Principle = principle
+	return p
+}
+
 func (p *CheckPolicy) IsValid() bool {
-	if p.Kind == "" || p.Scope == "" || p.Role == "" || len(p.Action) == 0 {
+	if p.Kind == "" || p.Scope == "" || p.Role == "" || len(p.Action) == 0 || p.Principle == ""{
 		return false
 	}
 	return true
@@ -70,6 +76,10 @@ func (p *CheckPolicy) GetRole() string {
 
 func (p *CheckPolicy) GetAction() []string {
 	return p.Action
+}
+
+func (p *CheckPolicy) GetPrinciple() string {
+	return p.Principle
 }
 
 func (p *CheckPolicy) Valid() (*Valid, error) {
@@ -102,9 +112,9 @@ func (v *Valid) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 		for _, a := range v.CheckPolicy.Action {
 			ctx = metadata.AppendToOutgoingContext(ctx, "action", a)
 		}
+		ctx = metadata.AppendToOutgoingContext(ctx, "principle", v.CheckPolicy.Principle)
 		// Invoke the original method call
 		err := invoker(ctx, method, req, reply, cc, opts...)
-		log.Printf("client interceptor hit: appending scope,Kind,role,action: '%v %v %v %v ' to metadata", v.CheckPolicy.Scope, v.CheckPolicy.Kind, v.CheckPolicy.Role, v.CheckPolicy.Action)
 		return err
 	}
 }
