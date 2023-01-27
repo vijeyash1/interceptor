@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-
+	"regexp"
 	effectv1 "github.com/cerbos/cerbos/api/genpb/cerbos/effect/v1"
 
 	"github.com/cerbos/cerbos/client"
@@ -34,10 +34,13 @@ func (c *CerbosConfig) client() (client.Client, error) {
 func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		// Get the metadata from the incoming context
+
+		m1 := regexp.MustCompile(`^/.*/`)
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil, fmt.Errorf("couldn't parse incoming context metadata")
 		}
+		mdkind := m1.ReplaceAllString(info.FullMethod, "")
 		mdprinciple := md.Get("principle")
 		if len(mdprinciple) == 0 {
 			return nil, fmt.Errorf("principle not found in metadata")
@@ -65,7 +68,7 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		}
 		log.Println(info.FullMethod)
 		principal := client.NewPrincipal(mdprinciple[0], mdrole...)
-		resource := client.NewResource(info.FullMethod, "intelops")
+		resource := client.NewResource(mdkind, "intelops")
 		resource.WithScope(mdscope[0])
 		batch := client.NewResourceBatch()
 		batch.Add(resource, mdaction...)
