@@ -11,7 +11,7 @@ import (
 // PolicyPayload is the payload that is sent to the server
 // in the metadata of the request to check if the user has the required permissions
 type CheckPolicy struct {
-	Kind   string `json:"kind"`
+	// Kind   string `json:"kind"`
 	Scope  string `json:"scope"`
 	Role   string `json:"role"`
 	Action []string `json:"actions"`
@@ -30,10 +30,10 @@ func (p *CheckPolicy) AddRole(role string) *CheckPolicy {
 }
 
 // AddResource adds the resource to the CheckPolicy
-func (p *CheckPolicy) AddKind(kind string) *CheckPolicy {
-	p.Kind = kind
-	return p
-}
+// func (p *CheckPolicy) AddKind(kind string) *CheckPolicy {
+// 	p.Kind = kind
+// 	return p
+// }
 
 // AddScope adds the scope to the CheckPolicy
 func (p *CheckPolicy) AddScope(scope string) *CheckPolicy {
@@ -56,15 +56,15 @@ func (p *CheckPolicy) AddPrinciple(principle string) *CheckPolicy {
 }
 
 func (p *CheckPolicy) IsValid() bool {
-	if p.Kind == "" || p.Scope == "" || p.Role == "" || len(p.Action) == 0 || p.Principle == ""{
+	if p.Scope == "" || p.Role == "" || len(p.Action) == 0 || p.Principle == ""{
 		return false
 	}
 	return true
 }
 
-func (p *CheckPolicy) GetKind() string {
-	return p.Kind
-}
+// func (p *CheckPolicy) GetKind() string {
+// 	return p.Kind
+// }
 
 func (p *CheckPolicy) GetScope() string {
 	return p.Scope
@@ -107,7 +107,7 @@ func (v *Valid) UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// append the scope, resource, role and actions to the metadata
 		ctx = metadata.AppendToOutgoingContext(ctx, "scope", v.CheckPolicy.Scope)
-		ctx = metadata.AppendToOutgoingContext(ctx, "kind", v.CheckPolicy.Kind)
+		// ctx = metadata.AppendToOutgoingContext(ctx, "kind", v.CheckPolicy.Kind)
 		ctx = metadata.AppendToOutgoingContext(ctx, "role", v.CheckPolicy.Role)
 		for _, a := range v.CheckPolicy.Action {
 			ctx = metadata.AppendToOutgoingContext(ctx, "action", a)

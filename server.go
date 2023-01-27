@@ -3,6 +3,7 @@ package interceptor
 import (
 	"context"
 	"fmt"
+	"log"
 
 	effectv1 "github.com/cerbos/cerbos/api/genpb/cerbos/effect/v1"
 
@@ -45,10 +46,11 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if len(mdscope) == 0 {
 			return nil, fmt.Errorf("scope not found in metadata")
 		}
-		mdkind := md.Get("kind")
-		if len(mdkind) == 0 {
-			return nil, fmt.Errorf("kind not found in metadata")
-		}
+		// mdkind := md.Get("kind")
+		// if len(mdkind) == 0 {
+		// 	return nil, fmt.Errorf("kind not found in metadata")
+		// }
+		
 		mdrole := md.Get("role")
 		if len(mdrole) == 0 {
 			return nil, fmt.Errorf("role not found in metadata")
@@ -61,8 +63,9 @@ func (c *CerbosConfig) UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		if error != nil {
 			return nil, error
 		}
+		log.Println(info.FullMethod)
 		principal := client.NewPrincipal(mdprinciple[0], mdrole...)
-		resource := client.NewResource(mdkind[0], "intelops")
+		resource := client.NewResource(info.FullMethod, "intelops")
 		resource.WithScope(mdscope[0])
 		batch := client.NewResourceBatch()
 		batch.Add(resource, mdaction...)
